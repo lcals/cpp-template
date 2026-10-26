@@ -1,6 +1,7 @@
 """在隔离目录验证模板初始化，不修改仓库中的模板。"""
 
 import importlib.util
+import json
 from pathlib import Path
 import shutil
 import tempfile
@@ -73,6 +74,11 @@ class InitializeProjectTests(unittest.TestCase):
 
     def test_real_template_copy_initializes_every_build_file(self):
         template = SCRIPT.parents[1]
+        project_name = json.loads((template / "vcpkg.json").read_text(encoding="utf-8"))["name"]
+        if project_name != "cpp-template":
+            self.assertTrue((template / "include" / project_name.replace("-", "_")).is_dir())
+            self.skipTest("项目已经从模板完成初始化")
+
         for directory in (".github", "cmake", "docs", "include", "src", "tests", "third_party"):
             shutil.copytree(template / directory, self.root / directory, dirs_exist_ok=True)
         for filename in ("CMakeLists.txt", "CMakePresets.json", "vcpkg.json", "README.md", "AGENTS.md"):
